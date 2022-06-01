@@ -1,0 +1,231 @@
+# An example YAML file
+
+---
+
+# Time span that the simulation will run.
+#timespan: 21941800 # for dft all data
+#timespan: 17362800 # for pit all data
+#timespan: 289400 # for pit bigData
+#timespan: 158867000 # 5 years of HPC data
+#timespan: 950400 # testing 11 days of HPC data
+#timespan: 15552000 # testing 180 days of HPC data
+#timespan: 54000 # testing 6to20 hour of HPC data
+
+#timespan: 366000 # seconds in 4.2 days
+# parameters for initializing the HPC cluster
+#
+data_collection_interval: &dci 1 # interval in seconds at which to collect state of the simulation. 
+ALL:
+  # Set all clouds except the main cluster to cluster_size = 15 
+  exp_name: &exp_name 'testing_FLOCX_Apr2022'
+  silo: True
+  # exp_name: &exp_name 'silo_01_clusters_11'
+  tracetime: 36000 # stop reading new inputs from trace files after this point in time. 
+  runtime: 43200 # Model time span. 12 hours (in seconds)
+  dir_input: &inputdir 'input_files' # in pwd
+  dir_validate: &validdir [*inputdir, 'validation_parameters']
+  path_logs: &logpath ['logs', *exp_name] # in pwd
+  contract_lease_duration: &leasetime 600  # 5 minutes in seconds
+  tracefiles:
+    hpc: &hpc_input 'HPC_model_input_trace.csv'
+    #cloud: &cld_input 'model450_rev_alt_peak_cloud_input.csv'
+    cloud: &cld_input 'cloud_input_trace_18_Nodes.csv'
+    bigdata: &bgd_input 'bgd_input_same_as_exp.csv'
+    # Comment out the following lines when validating the silo and marketplace.
+    hpc20: &hpc20_input 'HPC20_model_input_trace.csv'
+    hpc15: &hpc15_input 'HPC15_model_input_trace.csv'
+    cloud75: &cld75_input 'cloud75_input.csv'
+    cloud60: &cld60_input 'cloud60_input.csv'
+    cloud50: &cld50_input 'cloud50_input.csv'
+    bigdata10: &bgd10_input 'bgd10_input.csv'
+    bigdata8: &bgd8_input 'bgd8_input.csv'
+    bigdata23: &bgd23_input 'bgd23_input.csv'
+  clusters: [
+  'hpc_main',
+  #'cloud_main',
+  'bigdata_main',
+  # 'cloud75', 'cloud60',
+  'cloud50',
+  # 'hpc20', 'hpc15',
+  # 'bigdata8', 'bigdata10', 'bigdata23',
+  ]
+    
+marketplace:
+  name: M1
+  auction_begins_at: 1800   # Timestamp in seconds when 1st auction will commence.
+  lease_duration: *leasetime   # Lease in seconds. eg. 30 min lease = 1800 seconds
+  path_output: *logpath
+  stats_auction: 'auction_stats.csv'
+  
+  # A contract will last for this many seconds.
+  # Also, every subsequent auction repeats after this time.x
+
+hpc_main:
+  name: hpc_main
+  type: hpc
+  nodes: 49      # Number of nodes owned by the cluster
+  cores_per_node: 24    # Cores per node in the cluster. Assumes homogeneous hardware. 
+  tracetime: 36000
+  path_input: [ *inputdir, *hpc_input ]
+  silo_validation: [ *validdir, {'end_delay':'slurm_enddelay_variations.csv'} ] 
+  path_output: *logpath
+  report_interval: *dci
+  agent:
+    type: hpc
+    budget: 400
+
+cloud50:
+  name: cloud50
+  type: cloud
+  nodes: 20
+  cores_per_node: 24
+  tracetime: 36000 
+  path_input: [ *inputdir, *cld50_input ]
+  silo_validation: [ *validdir, {
+  'start_delay': 'ostack_time2selectHypervisor_Allvariations.csv',
+  'end_delay': 'ostack_time2end_variations.csv'
+  } ]
+  path_output: *logpath
+  report_interval: *dci
+  agent:
+    type: cloud
+    budget: 400
+    # Only if cluster type is cloud:
+    history:
+      windowsize: 6
+      update_interval: 100 # time in seconds
+
+bigdata_main:
+  name: bigdata_main
+  type: bigdata
+  nodes: 26
+  cores_per_node: 24
+  path_input: [ *inputdir, *bgd_input ]
+  tracetime: 36000
+  silo_validation: [ *validdir, {
+  'submit_delay': 'spark_submitdelay_variations.csv',
+  'start_delay':'spark_startdelay_variations.csv',
+  'end_delay':'spark_enddelay_variations.csv'
+  } ]
+  path_output: *logpath
+  report_interval: *dci
+  agent:
+    type: bigdata
+    budget: 400
+
+
+# More clusters to see its effect on the auctioning system.
+# For HPC and Bigdata clusters only changing the size of the cluster.
+# Uses the same tracefiles, starting budget, and maintenance cost. 
+# This will change the queuing behaviour and thereby affecting the bidding behaviour.
+#
+hpc20:
+  name: hpc20
+  type: hpc
+  nodes: 20
+  cores_per_node: 24
+  path_input: [ *inputdir, *hpc20_input ] 
+  path_output: *logpath
+  report_interval: *dci  
+  agent:
+    type: hpc
+    budget: 100
+
+hpc15:
+  name: hpc15
+  type: hpc
+  nodes: 15
+  cores_per_node: 24
+  path_input: [ *inputdir, *hpc15_input ] 
+  path_output: *logpath
+  report_interval: *dci  
+  agent:
+    type: hpc
+    budget: 100
+
+bigdata8:
+  name: bigdata8
+  type: bigdata
+  nodes: 8
+  cores_per_node: 24
+  path_input: [ *inputdir, *bgd8_input ] 
+  path_output: *logpath
+  report_interval: *dci  
+  agent:
+    type: bigdata
+    budget: 100
+
+bigdata10:
+  name: bigdata10
+  type: bigdata
+  nodes: 10
+  cores_per_node: 24
+  path_input: [ *inputdir, *bgd10_input ] 
+  path_output: *logpath
+  report_interval: *dci  
+  agent:
+    type: bigdata
+    budget: 100
+
+bigdata23:
+  name: bigdata23
+  type: bigdata
+  nodes: 23
+  cores_per_node: 24
+  path_input: [ *inputdir, *bgd23_input ] 
+  path_output: *logpath
+  report_interval: *dci    
+  agent:
+    type: bigdata
+    budget: 100
+
+# Cloud I cannot reduce the size of the cluster as it may violate SLOs.
+# Instead I will shift the workload behaviour to have different peak behaviour.
+# a.k.a different trace files.
+# Rest all stays the same.
+cloud_100: # original trace from which other traces were made
+  type: cloud
+  name: cloud_100
+  nodes: 20
+  cores_per_node: 24
+  path_input: [ *inputdir, *cld_input ] 
+  path_output: *logpath
+  report_interval: *dci
+  agent:
+    type: cloud
+    budget: 200
+    history:
+      windowsize: 6
+      update_interval: 100 # time in seconds
+
+cloud60:
+  name: cloud60
+  type: cloud
+  nodes: 15
+  cores_per_node: 24
+  path_input: [ *inputdir, *cld60_input ] 
+  path_output: *logpath
+  report_interval: *dci
+  agent:
+    type: cloud
+    budget: 100
+    history:
+      windowsize: 6
+      update_interval: 100 # time in seconds    
+
+
+cloud75:
+  name: cloud75
+  type: cloud
+  nodes: 15
+  cores_per_node: 24
+  path_input: [ *inputdir, *cld75_input ] 
+  path_output: *logpath
+  report_interval: *dci
+  agent:
+    type: cloud
+    budget: 100
+    # Only if cluster type is cloud:
+    history:
+      windowsize: 6
+      update_interval: 100 # time in seconds

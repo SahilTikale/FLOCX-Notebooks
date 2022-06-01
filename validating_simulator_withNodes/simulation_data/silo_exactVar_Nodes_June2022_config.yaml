@@ -1,0 +1,119 @@
+ALL:
+  agents:
+  - hpc_main_agent
+  - bigdata_main_agent
+  - cloud50_agent
+  clusters:
+  - hpc_main
+  - bigdata_main
+  - cloud50
+  contract_lease_duration: 600
+  dir_input: input_files
+  dir_validate: &id002
+  - input_files
+  - validation_parameters
+  exp_name: silo_exactVar_Nodes_June2022
+  path_logs: &id001
+  - logs
+  - silo_exactVar_Nodes_June2022
+  runtime: 43200
+  silo: true
+  tracefiles:
+    bigdata: bgd_input_same_as_exp.csv
+    cloud50: cloud50_input.csv
+    hpc: HPC_model_input_trace.csv
+  tracetime: 36000
+  validate: true
+bigdata_main:
+  agent:
+    budget: 400
+    logfile: logs/silo_exactVar_Nodes_June2022/bigdata_main_agent_logs.csv
+    name: bigdata_main_agent
+    type: bigdata
+  cores_per_node: 24
+  file_inputtrace: input_files/bgd_input_same_as_exp.csv
+  file_job_history: logs/silo_exactVar_Nodes_June2022/bigdata_main_job_history.csv
+  file_output: logs/silo_exactVar_Nodes_June2022/bigdata_main_all_output.csv
+  file_validation_input:
+    end_delay: input_files/validation_parameters/spark_enddelay_variations.csv
+    start_delay: input_files/validation_parameters/spark_startdelay_variations.csv
+    submit_delay: input_files/validation_parameters/spark_submitdelay_variations.csv
+  name: bigdata_main
+  nodes: 26
+  path_input:
+  - input_files
+  - bgd_input_same_as_exp.csv
+  path_output: *id001
+  report_interval: 1
+  silo_validation:
+  - *id002
+  - end_delay: spark_enddelay_variations.csv
+    start_delay: spark_startdelay_variations.csv
+    submit_delay: spark_submitdelay_variations.csv
+  tracetime: 36000
+  type: bigdata
+  validate: true
+cloud50:
+  agent:
+    budget: 400
+    history:
+      logfile: logs/silo_exactVar_Nodes_June2022/cloud50_agent_historylogs.csv
+      update_interval: 100
+      windowsize: 6
+    logfile: logs/silo_exactVar_Nodes_June2022/cloud50_agent_logs.csv
+    name: cloud50_agent
+    type: cloud
+  cores_per_node: 24
+  file_inputtrace: input_files/cloud50_input.csv
+  file_job_history: logs/silo_exactVar_Nodes_June2022/cloud50_job_history.csv
+  file_output: logs/silo_exactVar_Nodes_June2022/cloud50_all_output.csv
+  file_validation_input:
+    end_delay: input_files/validation_parameters/ostack_time2end_variations.csv
+    start_delay: input_files/validation_parameters/ostack_time2selectHypervisor_Allvariations.csv
+  name: cloud50
+  nodes: 20
+  path_input:
+  - input_files
+  - cloud50_input.csv
+  path_output: *id001
+  report_interval: 1
+  silo_validation:
+  - *id002
+  - end_delay: ostack_time2end_variations.csv
+    start_delay: ostack_time2selectHypervisor_Allvariations.csv
+  tracetime: 36000
+  type: cloud
+  validate: true
+data_collection_interval: 1
+hpc_main:
+  agent:
+    budget: 400
+    logfile: logs/silo_exactVar_Nodes_June2022/hpc_main_agent_logs.csv
+    name: hpc_main_agent
+    type: hpc
+  cores_per_node: 24
+  file_inputtrace: input_files/HPC_model_input_trace.csv
+  file_job_history: logs/silo_exactVar_Nodes_June2022/hpc_main_job_history.csv
+  file_output: logs/silo_exactVar_Nodes_June2022/hpc_main_all_output.csv
+  file_validation_input:
+    end_delay: input_files/validation_parameters/slurm_enddelay_variations.csv
+  name: hpc_main
+  nodes: 49
+  path_input:
+  - input_files
+  - HPC_model_input_trace.csv
+  path_output: *id001
+  report_interval: 1
+  silo_validation:
+  - *id002
+  - end_delay: slurm_enddelay_variations.csv
+  tracetime: 36000
+  type: hpc
+  validate: true
+marketplace:
+  auction_begins_at: 1800
+  file_auction_stats: logs/silo_exactVar_Nodes_June2022/auction_stats.csv
+  lease_duration: 600
+  name: M1
+  path_output: *id001
+  stats_auction: auction_stats.csv
